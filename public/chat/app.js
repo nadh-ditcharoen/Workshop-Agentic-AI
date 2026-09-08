@@ -1,7 +1,9 @@
 const history = [];
-const chat = document.querySelector('#chat'); const form = document.querySelector('#form'); const input = document.querySelector('#message'); const send = document.querySelector('#send');
-function bubble(role, content) { const el = document.createElement('div'); el.className = `bubble ${role}`; el.textContent = content; chat.appendChild(el); chat.scrollTop = chat.scrollHeight; }
+const chat = document.querySelector('#chat'); const form = document.querySelector('#form'); const input = document.querySelector('#message'); const send = document.querySelector('#send'); const emptyState = document.querySelector('#empty-state');
+function bubble(role, content) { emptyState?.remove(); const el = document.createElement('div'); el.className = `bubble ${role}`; el.textContent = content; chat.appendChild(el); chat.scrollTop = chat.scrollHeight; }
+function thinkingBubble() { const el = document.createElement('div'); el.className = 'bubble assistant thinking'; el.innerHTML = '<i></i><i></i><i></i><span>กำลังคิด...</span>'; chat.appendChild(el); chat.scrollTop = chat.scrollHeight; return el; }
 form.addEventListener('submit', async (event) => { event.preventDefault(); const message = input.value.trim(); if (!message) return; input.value = ''; bubble('user', message); send.disabled = true;
-  try { const response = await fetch('/api/chat', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({message, history, provider: document.querySelector('#provider').value, model: document.querySelector('#model').value.trim() || undefined}) }); const data = await response.json(); const reply = data.reply || data.error || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ'; bubble('assistant', reply); history.push({role:'user',content:message},{role:'assistant',content:reply}); }
-  catch (error) { bubble('assistant', `เชื่อมต่อ backend ไม่สำเร็จ: ${error.message}`); } finally { send.disabled = false; input.focus(); }
+  const loading = thinkingBubble();
+  try { const response = await fetch('/api/chat', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({message, history, provider: document.querySelector('#provider').value, model: document.querySelector('#model').value.trim() || undefined}) }); const data = await response.json(); const reply = data.reply || data.error || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ'; loading.remove(); bubble('assistant', reply); history.push({role:'user',content:message},{role:'assistant',content:reply}); }
+  catch (error) { loading.remove(); bubble('assistant', `เชื่อมต่อ backend ไม่สำเร็จ: ${error.message}`); } finally { send.disabled = false; input.focus(); }
 });
