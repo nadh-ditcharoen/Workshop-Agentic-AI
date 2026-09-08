@@ -1,0 +1,7 @@
+const history = [];
+const chat = document.querySelector('#chat'); const form = document.querySelector('#form'); const input = document.querySelector('#message'); const send = document.querySelector('#send');
+function bubble(role, content) { const el = document.createElement('div'); el.className = `bubble ${role}`; el.textContent = content; chat.appendChild(el); chat.scrollTop = chat.scrollHeight; }
+form.addEventListener('submit', async (event) => { event.preventDefault(); const message = input.value.trim(); if (!message) return; input.value = ''; bubble('user', message); send.disabled = true;
+  try { const response = await fetch('/api/chat', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({message, history, provider: document.querySelector('#provider').value, model: document.querySelector('#model').value.trim() || undefined}) }); const data = await response.json(); const reply = data.reply || data.error || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ'; bubble('assistant', reply); history.push({role:'user',content:message},{role:'assistant',content:reply}); }
+  catch (error) { bubble('assistant', `เชื่อมต่อ backend ไม่สำเร็จ: ${error.message}`); } finally { send.disabled = false; input.focus(); }
+});
